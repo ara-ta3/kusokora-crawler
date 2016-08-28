@@ -1,9 +1,9 @@
 -- +migrate Up
 -- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE kusokoras (
-    id integer,
-    pictureUrl text,
-    sourceUrl text
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pictureUrl TEXT UNIQUE,
+    sourceUrl TEXT
 );
 
 -- +migrate Down

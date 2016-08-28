@@ -10,5 +10,8 @@ run:
 migrate/up:
 	sql-migrate up
 
+migrate/down:
+	sql-migrate down
+
 migrate/status:
 	sql-migrate status
