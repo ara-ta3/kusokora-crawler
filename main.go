@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 
 	"./kusokora"
@@ -25,9 +26,16 @@ func main() {
 	s := kusokora.NewKusokoraService(
 		kusokora.NewKusokoraRepositoryOnSQLite(db),
 	)
-	mu := os.Args[1]
-	tu := os.Args[2]
-	e = s.AddKusokora(mu, tu)
+	mu, e := url.ParseRequestURI(os.Args[1])
+	if e != nil {
+		panic(e)
+	}
+	tu, e := url.ParseRequestURI(os.Args[2])
+	if e != nil {
+		panic(e)
+	}
+
+	e = s.AddKusokora(mu.String(), tu.String())
 	if e != nil {
 		panic(e)
 	}
