@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 
@@ -20,6 +20,10 @@ func main() {
 		cli.StringFlag{
 			Name:  "dbname, d",
 			Value: "./kusokora.db",
+		},
+		cli.StringFlag{
+			Name:  "conf, c",
+			Value: "./config.json",
 		},
 	}
 	app.EnableBashCompletion = true
@@ -67,17 +71,26 @@ func main() {
 					return e
 				}
 				defer db.Close()
-				//                 r := kusokora.NewKusokoraRepositoryOnSQLite(db)
-				conf, e := loadConfig("./config.json")
+				confpath := c.String("dbname")
+				if confpath == "" {
+					confpath = "./config.json"
+				}
+
+				conf, e := loadConfig(confpath)
 				if e != nil {
 					return e
 				}
+
+				r := kusokora.NewKusokoraRepositoryOnSQLite(db)
 				ts, e := loadKusokoraFromTwitter(conf)
 				if e != nil {
 					return e
 				}
 				for _, t := range ts {
-					fmt.Println(t)
+					e := r.Put(t)
+					if e != nil {
+						log.Println(e.Error())
+					}
 				}
 				return nil
 			},
