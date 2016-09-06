@@ -8,52 +8,97 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/urfave/cli"
+
 	"./kusokora"
 	"./twitter"
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("args must be over 2")
-		os.Exit(1)
+	app := cli.NewApp()
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "dbname, d",
+			Value: "./kusokora.db",
+		},
 	}
-	db, e := sql.Open("sqlite3", "./kusokora.db")
-	if e != nil {
-		panic(e)
+	app.EnableBashCompletion = true
+	app.Commands = []cli.Command{
+		{
+			Name:    "add",
+			Aliases: []string{"a"},
+			Usage:   "add to db",
+			Action: func(c *cli.Context) error {
+				// TODO default dbname from flag
+				dbname := c.String("dbname")
+				if dbname == "" {
+					dbname = "./kusokora.db"
+				}
+				db, e := sql.Open("sqlite3", dbname)
+				if e != nil {
+					return e
+				}
+				defer db.Close()
+				s := kusokora.NewKusokoraService(
+					kusokora.NewKusokoraRepositoryOnSQLite(db),
+				)
+				mu, e := url.ParseRequestURI(c.Args().First())
+				if e != nil {
+					return e
+				}
+				e = s.AddKusokora(mu.String())
+				if e != nil {
+					return e
+				}
+				return nil
+			},
+		},
+		{
+			Name:    "crawl",
+			Aliases: []string{"c"},
+			Usage:   "crawl from twitter",
+			Action: func(c *cli.Context) error {
+				dbname := c.String("dbname")
+				if dbname == "" {
+					dbname = "./kusokora.db"
+				}
+				db, e := sql.Open("sqlite3", dbname)
+				if e != nil {
+					return e
+				}
+				defer db.Close()
+				//                 r := kusokora.NewKusokoraRepositoryOnSQLite(db)
+				conf, e := loadConfig("./config.json")
+				if e != nil {
+					return e
+				}
+				ts, e := loadKusokoraFromTwitter(conf)
+				if e != nil {
+					return e
+				}
+				for _, t := range ts {
+					fmt.Println(t)
+				}
+				return nil
+			},
+		},
 	}
-	defer db.Close()
 
-	s := kusokora.NewKusokoraService(
-		kusokora.NewKusokoraRepositoryOnSQLite(db),
-	)
-	mu, e := url.ParseRequestURI(os.Args[1])
-	if e != nil {
-		panic(e)
-	}
-	tu, e := url.ParseRequestURI(os.Args[2])
-	if e != nil {
-		panic(e)
-	}
-
-	e = s.AddKusokora(mu.String(), tu.String())
-	if e != nil {
-		panic(e)
-	}
-	//     c, e := loadConfig("./config.json")
-	//     if e != nil {
-	//         panic(e)
-	//     }
-	//     e = loadKusokoraFromTwitter(c)
-	//     if e != nil {
-	//         panic(e)
-	//     }
+	app.Run(os.Args)
 }
 
-func loadKusokoraFromTwitter(c *Config) error {
+func loadKusokoraFromTwitter(c *Config) ([]kusokora.Kusokora, error) {
 	cli := twitter.NewClient(c.Twitter.ConsumerKey, c.Twitter.ConsumerSecret, c.Twitter.AccessToken, c.Twitter.AccessTokenSecret)
-	tweets, _ := cli.Query("#papixクソコラグランプリ")
-	fmt.Println(tweets)
-	return nil
+	ts, e := cli.Query("#papixクソコラグランプリ")
+	if e != nil {
+		return nil, e
+	}
+	ks := []kusokora.Kusokora{}
+	for _, t := range ts {
+		ks = append(ks, t.ToKusokora())
+	}
+
+	return ks, nil
 }
 
 func loadConfig(path string) (*Config, error) {

@@ -1,6 +1,9 @@
 package twitter
 
-import "github.com/ChimeraCoder/anaconda"
+import (
+	"../kusokora"
+	"github.com/ChimeraCoder/anaconda"
+)
 
 type ClientOnTwitter struct {
 	Api *anaconda.TwitterApi
@@ -40,4 +43,10 @@ func (cli *ClientOnTwitter) Query(q string) ([]Tweet, error) {
 type Tweet struct {
 	MediaURL   string
 	TwitterURL string
+}
+
+func (t *Tweet) ToKusokora() kusokora.Kusokora {
+	return kusokora.Kusokora{
+		PictureURL: t.MediaURL,
+	}
 }

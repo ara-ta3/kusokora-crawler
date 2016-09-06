@@ -1,5 +1,4 @@
 picUrl=https://pbs.twimg.com/media/CjeQ9FwUUAAeJrS.jpg
-twitterUrl=https://twitter.com/gomaaburamax/status/736216444275294208
 db=./kusokora.db
 
 install:
@@ -8,8 +7,11 @@ install:
 	go get "github.com/mattn/go-sqlite3"
 	go get "github.com/rubenv/sql-migrate/..."
 
-run:
-	go run main.go $(picUrl) $(twitterUrl)
+run-add:
+	go run main.go a $(picUrl)
+
+run-crawl:
+	go run main.go c
 
 migrate/up:
 	sql-migrate up
@@ -21,6 +23,7 @@ migrate/status:
 	sql-migrate status
 
 show:
+	sqlite3 $(db) ".tables"
 	sqlite3 $(db) "SELECT * FROM kusokoras"
 
 clean:

@@ -4,10 +4,9 @@ type KusokoraService struct {
 	kr KusokoraRepository
 }
 
-func (ks *KusokoraService) AddKusokora(picURL, sourceURL string) error {
+func (ks *KusokoraService) AddKusokora(picURL string) error {
 	return ks.kr.Put(Kusokora{
 		PictureURL: picURL,
-		SourceURL:  sourceURL,
 	})
 }
 
