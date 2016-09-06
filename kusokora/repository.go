@@ -8,5 +8,4 @@ type KusokoraRepository interface {
 type Kusokora struct {
 	ID         int
 	PictureURL string
-	SourceURL  string
 }

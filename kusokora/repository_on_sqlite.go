@@ -15,7 +15,7 @@ func NewKusokoraRepositoryOnSQLite(db *sql.DB) *KusokoraRepositoryOnSQLite {
 }
 
 func (kr *KusokoraRepositoryOnSQLite) GetAll() ([]Kusokora, error) {
-	rows, err := kr.DB.Query("SELECT id, pictureUrl, sourceUrl FROM kusokoras;")
+	rows, err := kr.DB.Query("SELECT id, pictureUrl, FROM kusokoras;")
 	if err != nil {
 		return nil, err
 	}
@@ -24,15 +24,13 @@ func (kr *KusokoraRepositoryOnSQLite) GetAll() ([]Kusokora, error) {
 	for rows.Next() {
 		var id int
 		var pictureURL string
-		var sourceURL string
-		err = rows.Scan(&id, &pictureURL, &sourceURL)
+		err = rows.Scan(&id, &pictureURL)
 		if err != nil {
 			return nil, err
 		}
 		krs = append(krs, Kusokora{
 			ID:         id,
 			PictureURL: pictureURL,
-			SourceURL:  sourceURL,
 		})
 	}
 	return krs, nil
@@ -43,12 +41,12 @@ func (kr *KusokoraRepositoryOnSQLite) Put(k Kusokora) error {
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("INSERT INTO kusokoras(pictureUrl, sourceUrl) values(?, ?)")
+	stmt, err := tx.Prepare("INSERT INTO kusokoras(pictureUrl) values(?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(k.PictureURL, k.SourceURL)
+	_, err = stmt.Exec(k.PictureURL)
 	if err != nil {
 		return err
 	}
